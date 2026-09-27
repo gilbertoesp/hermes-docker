@@ -1,0 +1,43 @@
+# ~/.hermes/docker-compose.yml
+services:
+  # Proxy seguro para la creación/destrucción de contenedores de sandboxing
+  docker-socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: docker-socket-proxy
+    privileged: true
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - hermes_net
+    environment:
+      - CONTAINERS=1
+      - IMAGES=1
+      - NETWORKS=1
+      - VOLUMES=1
+      - POST=1
+
+  # Tu co-ingeniero de infraestructura
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    container_name: hermes
+    restart: unless-stopped
+    command: gateway run
+    depends_on:
+      - docker-socket-proxy
+    ports:
+      - "8642:8642" # Gateway API
+      - "9119:9119" # Interfaz del Dashboard (opcional)
+    networks:
+      - hermes_net
+    volumes:
+      - ~/.hermes:/opt/data # Directorio persistente para memoria, skills y estado
+    env_file:
+      - ~/.hermes/.env # Inyección de secretos (API keys, GitHub tokens, SSH)
+    environment:
+      # Enruta los comandos Docker de Hermes a través del proxy TCP seguro
+      - DOCKER_HOST=tcp://docker-socket-proxy:2375
+
+networks:
+  hermes_net:
+    driver: bridge
