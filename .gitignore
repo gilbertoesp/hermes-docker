@@ -1,1 +1,22 @@
+# Environment and key files
 .env
+*.env
+*.pem
+*.key
+
+# WireGuard configuration
+wireguard/
+
+# Live SQLite databases & WAL logs
+*.db
+*.db-shm
+*.db-wal
+state.db*
+
+# Runtime cache and logs
+logs/
+cache/
+home/
+downloads/
+.venv/
+__pycache__/
